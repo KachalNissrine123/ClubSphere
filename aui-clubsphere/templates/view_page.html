@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ config.label }} - ClubSphere{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <span class="eyebrow purple">View</span>
+        <h1>{{ config.label }}</h1>
+    </div>
+    <form class="search" method="get">
+        <input name="q" value="{{ search }}" placeholder="Search any visible field">
+        <button class="button ghost" type="submit">Search</button>
+    </form>
+</section>
+
+<section class="data-panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    {% for column in config.columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        {% for column in config.columns %}
+                            <td>{{ row[column] }}</td>
+                        {% endfor %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="{{ config.columns|length }}" class="empty">No records found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Portal - ClubSphere{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <span class="eyebrow green">Student Portal</span>
+        <h1>{{ student.stu_fname ~ " " ~ student.stu_lname if student else "New Student" }}</h1>
+    </div>
+    <div class="page-head-actions">
+        {% if is_club_admin %}
+            <a class="button secondary" href="{{ url_for('club_admin_portal') }}">Open Club Admin Portal</a>
+        {% endif %}
+        <a class="button ghost" href="{{ url_for('student_logout') }}">Logout</a>
+    </div>
+</section>
+
+<section class="workspace-grid student-grid">
+    <form class="form-panel" method="post" action="{{ url_for('save_student_profile') }}">
+        <div class="panel-title">
+            <h2>Profile</h2>
+        </div>
+        {% if student %}
+        <div style="background: #f0f4f8; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+            <div style="font-size: 13px; color: #667085; margin-bottom: 4px;">Student Information</div>
+            <div style="font-size: 14px; color: #172033; line-height: 1.6;">
+                <strong>{{ student.stu_fname }} {{ student.stu_lname }}</strong><br>
+                <span style="color: #667085;">{{ student.stu_email }}</span>
+            </div>
+        </div>
+        {% endif %}
+        <label>
+            Student ID
+            <input name="stu_id" value="{{ student.stu_id if student else '' }}" {% if student %}readonly{% endif %} required>
+        </label>
+        <label>
+            First Name
+            <input name="stu_fname" value="{{ student.stu_fname if student else '' }}" required>
+        </label>
+        <label>
+            Last Name
+            <input name="stu_lname" value="{{ student.stu_lname if student else '' }}" required>
+        </label>
+        <label>
+            Email
+            <input type="email" name="stu_email" value="{{ student.stu_email if student else student_email }}" {% if student %}readonly{% endif %} required>
+        </label>
+        <label>
+            Major
+            <select name="stu_major">
+                <option value="">-- Select major --</option>
+                {% for m in majors %}
+                    <option value="{{ m }}" {% if student and student.stu_major == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Year
+            <input name="stu_year" value="{{ student.stu_year if student and student.stu_year else '' }}" inputmode="numeric">
+        </label>
+        <label>
+            Phone
+            <input name="stu_phone" value="{{ student.stu_phone if student else '' }}">
+        </label>
+        <button class="button success" type="submit">Save Profile</button>
+    </form>
+
+    <div class="stack">
+        <section class="data-panel">
+            <div class="panel-title inline">
+                <h2>Available Events</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Event Name</th>
+                            <th>Club</th>
+                            <th>Venue</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                            <tr>
+                                <td>{{ event.event_id }}</td>
+                                <td>{{ event.event_name }}</td>
+                                <td>{{ event.club_name }}</td>
+                                <td>{{ event.venue_name }}</td>
+                                <td>{{ event.event_date }}</td>
+                                <td>{{ event.event_status }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="empty">No events available.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="data-panel">
+            <div class="panel-title inline">
+                <h2>My Attendance</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Record ID</th>
+                            <th>Event</th>
+                            <th>Club</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Recorded At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                            <tr>
+                                <td>{{ record.att_id }}</td>
+                                <td>{{ record.event_name }}</td>
+                                <td>{{ record.club_name }}</td>
+                                <td>{{ record.event_date }}</td>
+                                <td>{{ record.att_status }}</td>
+                                <td>{{ record.att_timestamp }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="empty">No attendance records found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="data-panel">
+            <div class="panel-title inline">
+                <h2>Available Clubs</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Club ID</th>
+                            <th>Club Name</th>
+                            <th>Category</th>
+                            <th>Active Members</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for club in clubs %}
+                            <tr>
+                                <td>{{ club.club_id }}</td>
+                                <td>{{ club.club_name }}</td>
+                                <td>{{ club.club_category }}</td>
+                                <td>{{ club.active_members }}</td>
+                                <td>
+                                    <form method="post" action="{{ url_for('join_club') }}">
+                                        <input type="hidden" name="club_id" value="{{ club.club_id }}">
+                                        <button class="small-button" type="submit">Join</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="empty">No clubs found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="data-panel">
+            <div class="panel-title inline">
+                <h2>My Memberships</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Membership ID</th>
+                            <th>Club</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership in memberships %}
+                            <tr>
+                                <td>{{ membership.memb_id }}</td>
+                                <td>{{ membership.club_name }}</td>
+                                <td>{{ membership.role_name }}</td>
+                                <td>{{ membership.memb_join_date }}</td>
+                                <td>{{ membership.memb_status }}</td>
+                                <td>
+                                    <form method="post" action="{{ url_for('leave_club') }}">
+                                        <input type="hidden" name="memb_id" value="{{ membership.memb_id }}">
+                                        <button class="text-danger" type="submit">Leave</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="empty">No memberships found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

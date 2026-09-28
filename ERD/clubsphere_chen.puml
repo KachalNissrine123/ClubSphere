@@ -1,0 +1,182 @@
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' CSC 3326                         Database Systems                    Summer 2026  '
+'                                                                                   '
+' ClubSphere ERD (Chen notation)                                                    '
+'                                                                                   '
+' Java -jar plantuml.jar club_chen.puml						    '
+'                                                                                   '
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+@startchen
+title ClubSphere - Chen ER Diagram
+
+entity app_user {
+    user_id <<key>>
+    user_fname
+    user_lname
+    user_email
+    user_phone
+}
+entity login {
+    login_id <<key>>
+    user_password
+    last_login
+}
+entity student {
+    user_id <<key>>
+    stu_major
+    stu_year
+}
+entity admin {
+    user_id <<key>>
+    admin_position
+    admin_office
+}
+entity club {
+    club_id <<key>>
+    club_name
+    club_found_date
+    club_description
+}
+entity role {
+    role_id <<key>>
+    role_name
+    role_description
+}
+entity venue {
+    venue_id <<key>>
+    venue_name
+    venue_capacity
+    venue_location
+}
+entity club_category {
+    category_id <<key>>
+    category_name
+}
+entity event {
+    event_id <<key>>
+    event_name
+    event_date
+    event_status
+    event_description
+}
+entity budget {
+    budget_id <<key>>
+    budget_year
+    budget_allocated
+    budget_spent
+    budget_status
+}
+entity expense {
+    expense_id <<key>>
+    expense_amount
+    expense_date
+    expense_description
+}
+entity sponsor {
+    sponsor_id <<key>>
+    sponsor_name
+    sponsor_type
+    sponsor_email
+    sponsor_phone
+}
+entity budget_transaction {
+    transaction_id <<key>>
+    transaction_date
+    transaction_desc
+    transaction_amount
+    transaction_type
+    recorded_by
+}
+entity budget_alert {
+    alert_id <<key>>
+    alert_message
+    created_at
+    resolved
+}
+entity budget_audit {
+    audit_id <<key>>
+    old_spent
+    new_spent
+    changed_at
+}
+relationship belongs_to_category {
+}
+relationship contains_expense {
+}
+relationship has {
+}
+relationship O {
+}
+relationship organizes {
+}
+relationship hosts {
+}
+relationship has_budget {
+}
+relationship manages {
+}
+relationship approves {
+}
+relationship checks {
+}
+relationship logs {
+}
+relationship tied_to {
+}
+relationship logged_for {
+}
+relationship raised_for {
+}
+relationship membership {
+    memb_join_date
+    memb_status
+}
+relationship attends {
+    att_status
+    att_timestamp
+}
+relationship sponsors {
+    spons_amount
+    spons_date
+    spons_type
+}
+'=========================
+' CONNECTIONS
+'=========================
+app_user =1= has
+login =1= has
+app_user -1- O
+student -1- O
+admin -1- O
+student -M- membership
+club =M= membership
+role -1- membership
+club -1- organizes
+event =M= organizes
+venue =1= hosts
+event =M= hosts
+student -M- attends
+event =M= attends
+club_category -1- belongs_to_category
+club =M= belongs_to_category
+club =1= has_budget
+budget =M= has_budget
+admin -1- manages
+club =M= manages
+admin -1- approves
+event =M= approves
+admin -1- checks
+budget =M= checks
+budget -1- contains_expense
+expense =M= contains_expense
+sponsor -M- sponsors
+club =M= sponsors
+club =1= logs
+budget_transaction =M= logs
+budget -1- tied_to
+budget_transaction =M= tied_to
+club -1- logged_for
+budget_audit =M= logged_for
+club -1- raised_for
+budget_alert =M= raised_for
+@endchen

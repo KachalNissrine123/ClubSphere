@@ -1,0 +1,493 @@
+{% extends "layout.html" %}
+
+{% block title %}Club Admin Portal - ClubSphere{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <span class="eyebrow amber">Club Admin</span>
+        <h1>{{ student.stu_fname ~ " " ~ student.stu_lname }}</h1>
+        <p>Manage your club's members, events, venues, sponsorships, and budgets.</p>
+    </div>
+    <a class="button ghost" href="{{ url_for('student_portal') }}">Back to Student Portal</a>
+</section>
+
+{% if request.args.get('debug') == '1' %}
+<section class="form-panel debug">
+    <div class="panel-title"><h3>Debug: Permission evaluation</h3></div>
+    <div style="padding:8px;font-family:monospace;white-space:pre-wrap;">
+        club_roles: {{ club_roles }}\n
+        selected_club_id: {{ selected_club_id }}\n
+        can_manage_all: {{ can_manage_all }}\n
+        can_manage_events: {{ can_manage_events }}\n
+        can_manage_venues: {{ can_manage_venues }}\n
+        can_view_finance: {{ can_view_finance }}
+    </div>
+</section>
+{% endif %}
+
+<section class="workspace-grid club-admin-grid">
+    {% if not active_section or active_section == 'members' %}
+    <section id="members" class="form-panel club-admin-primary">
+        <div class="panel-title">
+            <h2>Your Clubs</h2>
+        </div>
+        <form method="get" action="{{ url_for('club_admin_portal') }}">
+            <label for="club_id">Select Club</label>
+            <select id="club_id" name="club_id" onchange="this.form.submit()">
+                {% for club in clubs %}
+                    <option value="{{ club.club_id }}" {% if club.club_id == selected_club_id %}selected{% endif %}>
+                        {{ club.club_id }} — {{ club.club_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+        {% if clubs %}
+        <div class="club-overview-grid">
+            <article class="club-overview-card">
+                <span>Admin Clubs</span>
+                <strong>{{ clubs|length }}</strong>
+                <small>Clubs you can currently manage.</small>
+            </article>
+            <article class="club-overview-card">
+                <span>Active Members</span>
+                <strong>
+                    {% set selected_club = clubs | selectattr('club_id', 'equalto', selected_club_id) | list | first %}
+                    {{ selected_club.active_members if selected_club else 0 }}
+                </strong>
+                <small>Members in the selected club.</small>
+            </article>
+        </div>
+        {% endif %}
+        <div class="table-wrap compact">
+            <table class="club-overview-table">
+                <thead>
+                    <tr>
+                        <th>Club ID</th>
+                        <th>Club Name</th>
+                        <th>Category ID</th>
+                        <th>Category</th>
+                        <th>Founded</th>
+                        <th>Active Members</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for club in clubs %}
+                        <tr {% if club.club_id == selected_club_id %}class="selected"{% endif %}>
+                            <td>{{ club.club_id }}</td>
+                            <td>{{ club.club_name }}</td>
+                            <td>{{ club.category_id }}</td>
+                            <td>{{ club.club_category }}</td>
+                            <td>{{ club.club_found_date or '—' }}</td>
+                            <td>{{ club.active_members }}</td>
+                            <td class="cell-wrap">{{ club.club_description or '—' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="empty">No club administration privileges found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="form-panel-lg">
+        <section id="club_members" class="form-panel">
+            <div class="panel-title">
+                <h2>Club Members</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Membership ID</th>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th style="width: 60px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in club_members %}
+                            <tr>
+                                <td>{{ member.memb_id }}</td>
+                                <td>{{ member.stu_id }}</td>
+                                <td>{{ member.stu_fname }} {{ member.stu_lname }}</td>
+                                <td>{{ member.role_name }}</td>
+                                <td>{{ member.memb_status }}</td>
+                                <td style="text-align: center;">
+                                    <form method="post" action="{{ url_for('admin_remove_member') }}" style="display: inline;">
+                                        <input type="hidden" name="club_id" value="{{ selected_club_id }}">
+                                        <input type="hidden" name="memb_id" value="{{ member.memb_id }}">
+                                        <button type="submit" class="button ghost small" style="padding: 4px 8px; font-size: 12px;" onclick="return confirm('Remove this member from the club?');">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="empty">Select a club to view its members.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="add_member" class="form-panel">
+            <div class="panel-title">
+                <h2>Add Member</h2>
+            </div>
+            {% if selected_club_id %}
+            <form method="post" action="{{ url_for('admin_add_member') }}">
+                <input type="hidden" name="club_id" value="{{ selected_club_id }}">
+                <label>
+                    Select Student
+                    <select name="student_id" required>
+                        <option value="">-- Choose a student --</option>
+                        {% for student in all_students %}
+                            <option value="{{ student.user_id }}">
+                                {{ student.user_id }} — {{ student.user_fname }} {{ student.user_lname }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button type="submit" class="button primary">Add Member</button>
+            </form>
+            {% else %}
+            <div style="padding: 12px; color: #667085; text-align: center;">
+                Select a club first to add members
+            </div>
+            {% endif %}
+        </section>
+    </section>
+    {% endif %}
+
+    {% if not active_section or active_section == 'events' %}
+    <section class="form-panel-lg">
+        <section id="events" class="form-panel">
+            <div class="panel-title">
+                <h2>Event Management</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Venue</th>
+                            <th>Description</th>
+                            {% if can_manage_events %}<th>Edit</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in club_events %}
+                            <tr>
+                                <td>{{ event.event_id }}</td>
+                                <td>{{ event.event_name }}</td>
+                                <td>{{ event.event_date }}</td>
+                                <td>{{ event.event_status }}</td>
+                                <td>{{ event.venue_name }}</td>
+                                <td>{{ event.event_description }}</td>
+                                {% if can_manage_events %}
+                                <td>
+                                    <form method="post" action="{{ url_for('club_admin_portal') }}" class="inline-status-form">
+                                        <input type="hidden" name="action" value="update_event_status">
+                                        <input type="hidden" name="club_id" value="{{ selected_club_id }}">
+                                        <input type="hidden" name="event_id" value="{{ event.event_id }}">
+                                        <select name="event_status" aria-label="Status for event {{ event.event_name }}">
+                                            <option value="Planned" {% if event.event_status == 'Planned' %}selected{% endif %}>Planned</option>
+                                            <option value="Ongoing" {% if event.event_status == 'Ongoing' %}selected{% endif %}>Ongoing</option>
+                                            <option value="Completed" {% if event.event_status == 'Completed' %}selected{% endif %}>Completed</option>
+                                            <option value="Cancelled" {% if event.event_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                        </select>
+                                        <button class="small-button" type="submit">Save</button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="{% if can_manage_events %}7{% else %}6{% endif %}" class="empty">No events for this club.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {% if can_manage_events %}
+        <section id="event_creation" class="form-panel">
+            <div class="panel-title">
+                <h2>Event Creation</h2>
+            </div>
+            <form method="post" action="{{ url_for('club_admin_portal') }}">
+                <input type="hidden" name="action" value="create_event">
+                <input type="hidden" name="club_id" value="{{ selected_club_id }}">
+                <label>
+                    Event Name
+                    <input name="event_name" required>
+                </label>
+                <label>
+                    Event Date
+                    <input name="event_date" type="date" value="{{ today }}" required>
+                </label>
+                <label>
+                    Venue
+                    <select name="venue_id">
+                        {% for venue in venues %}
+                            <option value="{{ venue.venue_id }}">{{ venue.venue_name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Status
+                    <select name="event_status">
+                        <option>Planned</option>
+                        <option>Ongoing</option>
+                        <option>Completed</option>
+                        <option>Cancelled</option>
+                    </select>
+                </label>
+                <label>
+                    Description
+                    <input name="event_description">
+                </label>
+                <button class="button primary" type="submit">Create Event</button>
+            </form>
+        </section>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if not active_section or active_section == 'attendance' %}
+    <section class="form-panel-lg">
+        <section id="attendance" class="form-panel">
+            <div class="panel-title">
+                <h2>Attendance Recording</h2>
+            </div>
+            <div class="table-wrap compact">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Record ID</th>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Event</th>
+                            <th>Status</th>
+                            <th>Recorded At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                            <tr>
+                                <td>{{ record.att_id }}</td>
+                                <td>{{ record.stu_id }}</td>
+                                <td>{{ record.stu_fname }} {{ record.stu_lname }}</td>
+                                <td>{{ record.event_name }}</td>
+                                <td>{{ record.att_status }}</td>
+                                <td>{{ record.att_timestamp }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="empty">No attendance records found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {% if can_manage_all %}
+        <section id="attendance_create" class="form-panel">
+            <div class="panel-title">
+                <h2>Record Attendance</h2>
+            </div>
+            <form method="post" action="{{ url_for('club_admin_portal') }}">
+                <input type="hidden" name="action" value="record_attendance">
+                <input type="hidden" name="club_id" value="{{ selected_club_id }}">
+                <label>
+                    Student ID
+                    <input name="stu_id" required>
+                </label>
+                <label>
+                    Event
+                    <select name="event_id">
+                        {% for event in club_events %}
+                            <option value="{{ event.event_id }}">{{ event.event_name }} ({{ event.event_date }})</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Status
+                    <select name="att_status">
+                        <option>Present</option>
+                        <option>Absent</option>
+                        <option>Excused</option>
+                    </select>
+                </label>
+                <button class="button primary" type="submit">Record Attendance</button>
+            </form>
+        </section>
+        {% else %}
+        <section class="form-panel">
+            <p class="muted">Only presidents and vice presidents can record attendance.</p>
+        </section>
+        {% endif %}
+    </section>
+    {% endif %}
+
+
+    {% if not active_section or active_section == 'sponsorships' %}
+    {% if can_view_finance %}
+    <section id="sponsorships" class="form-panel form-panel-expand">
+        <div class="panel-title">
+            <h2>Sponsorships</h2>
+        </div>
+        <div class="table-wrap compact">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sponsor Record ID</th>
+                        <th>Sponsor</th>
+                        <th>Club ID</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sponsorship in club_sponsorships %}
+                        <tr>
+                            <td>{{ sponsorship.sponsor_record_id }}</td>
+                            <td>{{ sponsorship.sponsor_name }}</td>
+                            <td>{{ sponsorship.club_id }}</td>
+                            <td>{{ sponsorship.spons_amount }}</td>
+                            <td>{{ sponsorship.spons_date }}</td>
+                            <td>{{ sponsorship.spons_type }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty">No sponsorship records found for this club.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% else %}
+    <section class="form-panel">
+        <div class="panel-title">
+            <h2>Sponsorships</h2>
+        </div>
+        <p class="muted">Only treasurers, presidents, and vice presidents can view sponsorship and financial records.</p>
+    </section>
+    {% endif %}
+    {% endif %}
+
+    {% if not active_section or active_section == 'budgets' %}
+    {% if can_view_finance %}
+    <section id="budgets" class="form-panel form-panel-expand">
+        <div class="panel-title">
+            <h2>Budget Overview</h2>
+            <p class="muted">Read-only budget information for the selected club.</p>
+        </div>
+        <div class="table-wrap compact">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Budget ID</th>
+                        <th>Club ID</th>
+                        <th>Club Name</th>
+                        <th>Year</th>
+                        <th>Allocated</th>
+                        <th>Spent</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
+                        <th>Health</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for budget in club_budgets %}
+                        <tr>
+                            <td>{{ budget.budget_id }}</td>
+                            <td>{{ budget.club_id }}</td>
+                            <td>{{ budget.club_name }}</td>
+                            <td>{{ budget.budget_year }}</td>
+                            <td>{{ budget.budget_allocated }}</td>
+                            <td>{{ budget.budget_spent }}</td>
+                            <td>{{ budget.budget_remaining }}</td>
+                            <td>{{ budget.budget_status }}</td>
+                            <td>
+                                <div class="health-indicator">
+                                    <span class="health-label">{{ budget.health }}</span>
+                                    <div class="health-bar">
+                                        {% if budget.health_score is none %}
+                                            <div class="health-bar-fill health-na" style="width: 100%;"></div>
+                                        {% else %}
+                                            <div class="health-bar-fill health-{{ 'healthy' if budget.health_score >= 50 else ('warning' if budget.health_score >= 20 else 'critical') }}"
+                                                 style="width: {{ budget.health_score }}%;"></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="empty">No budget records available for this club.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="budget-transactions" class="form-panel form-panel-expand">
+        <div class="panel-title">
+            <h2>Budget Transaction History</h2>
+            <p class="muted">Read-only. Entries are added and edited by the server admin.</p>
+        </div>
+        <div class="table-wrap compact">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Recorded By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in club_transactions %}
+                        <tr>
+                            <td>{{ tx.transaction_date }}</td>
+                            <td>{{ tx.transaction_desc }}</td>
+                            <td>{{ tx.transaction_amount }}</td>
+                            <td>{{ tx.transaction_type }}</td>
+                            <td>{{ tx.recorded_by or "-" }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="empty">No transactions recorded for this club yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% else %}
+    <section class="form-panel">
+        <div class="panel-title">
+            <h2>Budget Overview</h2>
+        </div>
+        <p class="muted">Only treasurers, presidents, and vice presidents can view budgets.</p>
+    </section>
+    {% endif %}
+    {% endif %}
+</section>
+{% endblock %}

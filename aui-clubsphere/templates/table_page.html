@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ config.label }} - ClubSphere{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <span class="eyebrow">Table</span>
+        <h1>{{ config.label }}</h1>
+    </div>
+    <form class="search" method="get">
+        <input name="q" value="{{ search }}" placeholder="Search any visible field">
+        <button class="button ghost" type="submit">Search</button>
+    </form>
+</section>
+
+<section class="workspace-grid">
+    <form class="form-panel" method="post">
+        <div class="panel-title">
+            <h2>{% if edit_record %}Edit Record{% else %}New Record{% endif %}</h2>
+        </div>
+        <input type="hidden" name="action" value="{% if edit_record %}update{% else %}insert{% endif %}">
+        {% if edit_record %}
+            <input type="hidden" name="pk_value" value="{{ edit_record[config.pk] }}">
+        {% endif %}
+
+        {% set dropdowns = config.get('dropdowns', {}) %}
+        {% for label, field in config.fields %}
+            {% if edit_record and field in edit_record %}
+                {% set value = edit_record[field] %}
+            {% elif field.endswith('_date') %}
+                {% set value = today %}
+            {% else %}
+                {% set value = "" %}
+            {% endif %}
+            <label>
+                {{ label }}
+                {% if field in dropdowns %}
+                    <select name="{{ field }}">
+                        <option value=""></option>
+                        {% for option in dropdowns[field] %}
+                            <option value="{{ option }}" {% if option == value|string %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                {% elif field.endswith('_date') %}
+                    <input name="{{ field }}" type="date" value="{{ value if value is not none else '' }}">
+                {% else %}
+                    <input name="{{ field }}" value="{{ value if value is not none else '' }}">
+                {% endif %}
+            </label>
+        {% endfor %}
+
+        <div class="button-row">
+            <button class="button primary" type="submit">
+                {% if edit_record %}Update{% else %}Add{% endif %}
+            </button>
+            {% if edit_record %}
+                <a class="button ghost" href="{{ url_for('table_page', slug=slug) }}">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <section class="data-panel">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in config.columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                        <th class="actions-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            {% for column in config.columns %}
+                                <td>{{ row[column] }}</td>
+                            {% endfor %}
+                            <td class="row-actions">
+                                <a class="small-link" href="{{ url_for('table_page', slug=slug, edit=row[config.pk], q=search) }}">Edit</a>
+                                <form method="post">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="pk_value" value="{{ row[config.pk] }}">
+                                    <button class="text-danger" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="{{ config.columns|length + 1 }}" class="empty">No records found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

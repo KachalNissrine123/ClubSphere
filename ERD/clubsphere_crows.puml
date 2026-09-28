@@ -1,0 +1,165 @@
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' CSC 3326                         Database Systems                    Summer 2026  '
+'                                                                                   '
+' ClubSphere ERD (Crow's Foot notation)                                             '
+'                                                                                   '
+' Java -jar plantuml.jar club_crows.puml					    '
+'                                                                                   '
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+@startuml
+title CSC3326    Database Systems    Summer 2026\nClubSphere database diagram
+hide circle
+hide empty members
+<style>
+class {
+  header {
+    BackGroundColor gray
+    FontStyle bold
+  }
+}
+</style>
+entity app_user {
+	#**user_id**
+	**user_fname**
+	**user_lname**
+	**user_email**
+	. user_phone
+}
+entity login {
+	#**login_id**
+	**<<FK1>> user_id**
+	**user_password**
+	. last_login
+}
+entity student {
+	#**<<FK1>> user_id**
+	**stu_major**
+	**stu_year**
+}
+entity admin {
+	#**<<FK1>> user_id**
+	**admin_position**
+	. admin_office
+}
+entity role {
+	#**role_id**
+	**role_name**
+	. role_description
+}
+entity venue {
+	#**venue_id**
+	**venue_name**
+	**venue_capacity**
+	**venue_location**
+}
+entity club_category {
+	#**category_id**
+	**category_name**
+}
+entity sponsor {
+	#**sponsor_id**
+	**sponsor_name**
+	**sponsor_type**
+	**sponsor_email**
+	. sponsor_phone
+}
+entity club {
+	#**club_id**
+	**<<FK1>> category_id**
+	**club_name**
+	. club_found_date
+	. club_description
+}
+entity membership {
+	#**memb_id**
+	**<<FK1>> user_id**
+	**<<FK2>> club_id**
+	**<<FK3>> role_id**
+	**memb_join_date**
+	**memb_status**
+}
+entity event {
+	#**event_id**
+	**<<FK1>> club_id**
+	**<<FK2>> venue_id**
+	**event_name**
+	**event_date**
+	**event_status**
+	. event_description
+}
+entity attendance {
+	#**att_id**
+	**<<FK1>> user_id**
+	**<<FK2>> event_id**
+	**att_status**
+	. att_timestamp
+}
+entity sponsorship {
+	#**sponsor_record_id**
+	**<<FK1>> sponsor_id**
+	**<<FK2>> club_id**
+	**spons_amount**
+	**spons_date**
+	**spons_type**
+}
+entity budget {
+	#**budget_id**
+	**<<FK1>> club_id**
+	**budget_year**
+	**budget_allocated**
+	**budget_spent**
+	**budget_status**
+}
+entity expense {
+	#**expense_id**
+	**<<FK1>> budget_id**
+	**expense_amount**
+	**expense_date**
+	. expense_description
+}
+entity budget_transaction {
+	#**transaction_id**
+	**<<FK1>> club_id**
+	. **<<FK2>> budget_id**
+	**transaction_date**
+	**transaction_desc**
+	**transaction_amount**
+	**transaction_type**
+	. recorded_by
+}
+entity budget_alert {
+	#**alert_id**
+	**club_id**
+	**budget_year**
+	**alert_message**
+	**created_at**
+	. resolved
+}
+entity budget_audit {
+	#**audit_id**
+	**club_id**
+	**budget_year**
+	**old_spent**
+	**new_spent**
+	**changed_at**
+}
+app_user ||..|| login : has
+app_user ||..o| admin : may_be
+app_user ||..o| student : may_be
+club_category ||..o{ club : categorizes
+venue |o..o{ event : hosts
+role |o..o{ membership : assigned_to
+sponsor ||..o{ sponsorship : gives
+club ||..o{ event : organizes
+club ||..o{ membership : has
+club ||..o{ sponsorship : receives
+club ||..o{ budget : allocated
+club ||..o{ budget_transaction : logs
+student ||..o{ membership : joins
+student ||..o{ attendance : attends
+event ||..o{ attendance : recorded_for
+budget ||..o{ expense : incurs
+budget |o..o{ budget_transaction : tied_to
+club ..o{ budget_audit : logged_for
+club ..o{ budget_alert : raised_for
+@enduml

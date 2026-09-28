@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block title %}Role Assignments - ClubSphere{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <span class="eyebrow">Administration</span>
+        <h1>Role Assignments</h1>
+        <p class="muted">Assign a club role to a student, change it, or remove it while keeping the membership.</p>
+    </div>
+    <form class="search" method="get">
+        <input name="q" value="{{ search }}" placeholder="Search student, club, role, IDs, or status">
+        <button class="button ghost" type="submit">Search</button>
+    </form>
+</section>
+
+<section class="workspace-grid">
+    <form class="form-panel" method="post">
+        <div class="panel-title"><h2>Assign or Change Role</h2></div>
+        <input type="hidden" name="action" value="assign">
+        <label>
+            Student
+            <select name="user_id" required>
+                <option value="">Choose a student</option>
+                {% for student in students %}
+                    <option value="{{ student.user_id }}">{{ student.user_id }} — {{ student.user_fname }} {{ student.user_lname }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Club
+            <select name="club_id" required>
+                <option value="">Choose a club</option>
+                {% for club in clubs %}
+                    <option value="{{ club.club_id }}">{{ club.club_id }} — {{ club.club_name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Role
+            <select name="role_id" required>
+                <option value="">Choose a role</option>
+                {% for role in roles %}
+                    <option value="{{ role.role_id }}">{{ role.role_id }} — {{ role.role_name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="button-row"><button class="button primary" type="submit">Save Role</button></div>
+    </form>
+
+    <section class="data-panel">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student ID</th><th>Student name</th><th>Club ID</th><th>Club name</th>
+                        <th>Role ID</th><th>Role name</th><th>Status</th><th class="actions-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ assignment.user_id }}</td>
+                            <td>{{ assignment.student_name }}</td>
+                            <td>{{ assignment.club_id or '—' }}</td>
+                            <td>{{ assignment.club_name or 'Not a member yet' }}</td>
+                            <td>{{ assignment.role_id or '—' }}</td>
+                            <td>{{ assignment.role_name }}</td>
+                            <td>{{ assignment.memb_status or '—' }}</td>
+                            <td class="row-actions">
+                                {% if assignment.role_id %}
+                                    <form method="post">
+                                        <input type="hidden" name="action" value="remove">
+                                        <input type="hidden" name="memb_id" value="{{ assignment.memb_id }}">
+                                        <button class="text-danger" type="submit">Remove role</button>
+                                    </form>
+                                {% else %}
+                                    <span class="muted">No role</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="8" class="empty">No students or role assignments found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

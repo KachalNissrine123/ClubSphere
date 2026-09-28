@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}ClubSphere{% endblock %}
+
+{% block content %}
+<section class="landing-shell">
+    <section class="landing-hero landing-hero--image" aria-label="Students collaborating on campus">
+    </section>
+
+    <div class="access-grid access-grid--landing">
+        <article class="access-panel access-panel--admin">
+            <div class="panel-header">
+                <span class="eyebrow">Administration</span>
+                <h2>Manage the club ecosystem.</h2>
+            </div>
+            <p class="muted">Maintain student records, club activity, venues, budgets, sponsorships, and reporting from one secure operational view.</p>
+            <a class="button primary" href="{{ url_for('admin_login') }}">Enter admin workspace</a>
+        </article>
+
+        <article class="access-panel access-panel--student">
+            <div class="panel-header">
+                <span class="eyebrow green">Student</span>
+                <h2>Find your place on campus.</h2>
+            </div>
+            <p class="muted">Keep your profile current, discover available clubs, join communities, and follow your memberships with ease.</p>
+            <a class="button success" href="{{ url_for('student_access') }}">Go to student portal</a>
+        </article>
+    </div>
+</section>
+{% endblock %}

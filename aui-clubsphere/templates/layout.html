@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}ClubSphere{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='images/favicon.jpg') }}">
+    <meta name="theme-color" content="#102a43">
+
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark">CS</span>
+            <span>
+                <strong>ClubSphere</strong>
+                <small>Student Organizations</small>
+            </span>
+        </a>
+        <nav class="top-actions">
+            {% if is_admin %}
+                <a href="{{ url_for('admin_home') }}">Admin</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            {% elif student_email %}
+                <a href="{{ url_for('student_portal') }}">Student Portal</a>
+                <a href="{{ url_for('student_logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('admin_login') }}">Admin</a>
+                <a href="{{ url_for('student_access') }}">Student portal</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="container{% if request.endpoint == 'index' %} home-container{% elif is_admin or student_email %} app-container{% endif %}">
+        <div class="shell">
+        {% if is_admin and session.get('admin') and (request.endpoint not in ['index', 'student_access', 'student_register', 'admin_login']) %}
+            <aside class="sidebar">
+                <section>
+                    <h2>Role management</h2>
+                    <a href="{{ url_for('role_assignments') }}"
+                       class="{% if request.endpoint == 'role_assignments' %}active{% endif %}">
+                        Role Assignments
+                    </a>
+                </section>
+                <section>
+                    <h2>Tables</h2>
+                    {% for slug, item in admin_nav.tables.items() %}
+                        <a href="{{ url_for('table_page', slug=slug) }}"
+                           class="{% if request.endpoint == 'table_page' and request.view_args.slug == slug %}active{% endif %}">
+                            {{ item.label }}
+                        </a>
+                    {% endfor %}
+                </section>
+                <section>
+                    <h2>Views</h2>
+                    {% for slug, item in admin_nav.views.items() %}
+                        <a href="{{ url_for('view_page', slug=slug) }}"
+                           class="{% if request.endpoint == 'view_page' and request.view_args.slug == slug %}active{% endif %}">
+                            {{ item.label }}
+                        </a>
+                    {% endfor %}
+                </section>
+                <!-- Functions section removed from sidebar (UI-only) -->
+            </aside>
+        {% elif is_club_admin and session.get('club_admin') and (request.endpoint not in ['index', 'student_access', 'student_register', 'admin_login']) %}
+            <aside class="sidebar compact">
+                <section>
+                    <h2>Club Admin</h2>
+                    <a href="{{ url_for('club_admin_portal', section='members') }}">Members</a>
+                    <a href="{{ url_for('club_admin_portal', section='events') }}">Events</a>
+                    <a href="{{ url_for('club_admin_portal', section='attendance') }}">Attendance</a>
+                    <a href="{{ url_for('club_admin_portal', section='sponsorships') }}">Sponsorships</a>
+                    <a href="{{ url_for('club_admin_portal', section='budgets') }}">Budgets</a>
+                </section>
+            </aside>
+        {% endif %}
+
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+        </div>
+    </div>
+</body>
+</html>

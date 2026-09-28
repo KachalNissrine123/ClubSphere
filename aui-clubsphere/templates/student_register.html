@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+
+{% block title %}Student Registration{% endblock %}
+
+{% block content %}
+<div class="centered access-bg">
+  <div class="form-card">
+    <h2>Create an account</h2>
+    <form method="post" action="{{ url_for('student_register') }}">
+      <div class="form-row">
+        <label>First name</label>
+        <input type="text" name="stu_fname" required />
+      </div>
+      <div class="form-row">
+        <label>Last name</label>
+        <input type="text" name="stu_lname" required />
+      </div>
+      <div class="form-row">
+        <label>Email</label>
+        <input type="email" name="stu_email" required />
+      </div>
+      <div class="form-row">
+        <label>Major</label>
+        <select name="stu_major">
+          <option value="">-- Select major --</option>
+          {% for m in majors %}
+            <option value="{{ m }}">{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Year</label>
+        <input type="text" name="stu_year" />
+      </div>
+      <div class="form-row">
+        <label>Phone</label>
+        <input type="text" name="stu_phone" />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="stu_password" required minlength="6" />
+      </div>
+      <div class="form-row">
+        <label>Confirm password</label>
+        <input type="password" name="stu_password_confirm" required minlength="6" />
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Register</button>
+        <a class="link-muted" href="{{ url_for('student_access') }}">Back to sign in</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

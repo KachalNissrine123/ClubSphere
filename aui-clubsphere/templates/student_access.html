@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Access - ClubSphere{% endblock %}
+
+{% block content %}
+<div class="access-bg">
+  <div class="form-card form-card--narrow">
+    <h2>Student Sign In</h2>
+    <form method="post" action="{{ url_for('student_access') }}">
+      <div class="form-row">
+        <label>AUI Email</label>
+        <input type="email" name="stu_email" required />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="stu_password" required />
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Sign In</button>
+        <a class="btn-outline" href="{{ url_for('student_register') }}">Register</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
